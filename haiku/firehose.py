@@ -1,9 +1,7 @@
 import re
 
-from atproto import CAR, FirehoseSubscribeReposClient, parse_subscribe_repos_message
-from atproto.exceptions import FirehoseError
+from atproto import CAR, parse_subscribe_repos_message
 
-from haiku.db import init_db, save_haiku
 from haiku.matcher import HaikuMatcher
 from haiku.syllables import count_syllables
 
@@ -113,43 +111,3 @@ def create_message_handler(matcher: HaikuMatcher, on_haiku):
                 on_haiku(haiku)
 
     return on_message_handler
-
-
-def main():
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Generate haikus from BlueSky firehose")
-    parser.add_argument(
-        "--no-save",
-        action="store_true",
-        help="Print haikus to stdout without saving to database",
-    )
-    args = parser.parse_args()
-
-    if args.no_save:
-
-        def on_haiku(haiku):
-            print(f"\n{'=' * 40}\n{haiku}\n{'=' * 40}\n")
-
-    else:
-        init_db()
-        haiku_count = 0
-
-        def on_haiku(haiku):
-            nonlocal haiku_count
-            haiku_id = save_haiku(haiku)
-            haiku_count += 1
-            print(f"\n{'=' * 40}")
-            print(f"Haiku #{haiku_id}")
-            print(haiku)
-            print(f"{'=' * 40}\n")
-
-    matcher = HaikuMatcher()
-    handler = create_message_handler(matcher, on_haiku)
-    client = FirehoseSubscribeReposClient()
-    try:
-        client.start(handler)
-    except FirehoseError as e:
-        print(f"Firehose error: {e}")
-    except KeyboardInterrupt:
-        print("\nShutting down...")

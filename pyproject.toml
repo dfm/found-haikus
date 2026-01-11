@@ -7,10 +7,12 @@ requires-python = ">=3.13"
 dependencies = [
     "atproto>=0.0.55",
     "cmudict>=1.0.0",
+    "flask>=3.0.0",
 ]
 
 [project.scripts]
 haiku = "haiku:main"
+haiku-serve = "haiku.server:serve"
 
 [dependency-groups]
 dev = ["pytest>=8.0.0", "ruff>=0.8.0"]

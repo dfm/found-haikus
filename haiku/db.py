@@ -56,18 +56,35 @@ def save_haiku(haiku: Haiku, db_path: Path = DEFAULT_DB_PATH) -> int:
         return cursor.lastrowid
 
 
-def get_recent_haikus(limit: int = 50, db_path: Path = DEFAULT_DB_PATH) -> list[dict]:
+def get_recent_haikus(
+    limit: int = 50, db_path: Path = DEFAULT_DB_PATH, after_id: int | None = None
+) -> list[dict]:
     with get_connection(db_path) as conn:
-        cursor = conn.execute(
-            """
-            SELECT id, created_at,
-                   line1_uri, line1_text,
-                   line2_uri, line2_text,
-                   line3_uri, line3_text
-            FROM haikus
-            ORDER BY id DESC
-            LIMIT ?
-            """,
-            (limit,),
-        )
+        if after_id is not None:
+            cursor = conn.execute(
+                """
+                SELECT id, created_at,
+                       line1_uri, line1_text,
+                       line2_uri, line2_text,
+                       line3_uri, line3_text
+                FROM haikus
+                WHERE id < ?
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (after_id, limit),
+            )
+        else:
+            cursor = conn.execute(
+                """
+                SELECT id, created_at,
+                       line1_uri, line1_text,
+                       line2_uri, line2_text,
+                       line3_uri, line3_text
+                FROM haikus
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (limit,),
+            )
         return [dict(row) for row in cursor.fetchall()]

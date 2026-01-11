@@ -1,4 +1,4 @@
-from haiku import count_syllables, count_syllables_word
+from haiku.syllables import count_syllables, count_syllables_word
 
 
 def test_simple_words():
