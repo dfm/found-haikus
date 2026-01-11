@@ -1,0 +1,30 @@
+[project]
+name = "haiku"
+version = "0.1.0"
+description = "BlueSky custom feed that assembles haikus from posts"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "atproto>=0.0.55",
+    "cmudict>=1.0.0",
+]
+
+[project.scripts]
+haiku = "haiku:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0.0", "ruff>=0.8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
