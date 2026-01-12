@@ -21,16 +21,11 @@ def main():
 
     if args.db:
         init_db(args.db)
-        haiku_count = 0
 
         def on_haiku(haiku):
-            nonlocal haiku_count
             haiku_id = save_haiku(haiku, args.db)
-            haiku_count += 1
-            print(f"\n{'=' * 40}")
-            print(f"Haiku #{haiku_id}")
-            print(haiku)
-            print(f"{'=' * 40}\n")
+            if haiku_id % 1000 == 0:
+                print(f"\n{'=' * 40}\n{haiku}\n{'=' * 40}\n")
 
     else:
 

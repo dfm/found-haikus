@@ -27,6 +27,9 @@ def is_english_text_only(record: dict) -> bool:
     if not langs or "en" not in langs:
         return False
 
+    if record.get("reply"):
+        return False
+
     if record.get("embed"):
         return False
 

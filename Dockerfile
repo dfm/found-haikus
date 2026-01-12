@@ -16,7 +16,12 @@ RUN uv sync --frozen --no-dev
 # Create data directory for SQLite
 RUN mkdir -p /data
 
+# Make start script executable
+RUN chmod +x scripts/start.sh
+
 ENV PATH="/app/.venv/bin:$PATH"
 ENV FEEDGEN_DB_PATH="/data/haiku.db"
 
 EXPOSE 8080
+
+CMD ["scripts/start.sh"]

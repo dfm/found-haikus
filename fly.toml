@@ -1,9 +1,12 @@
-# See https://fly.io/docs/reference/configuration/ for configuration options
-
-app = "haiku-feed"
+app = "found-haikus"
 primary_region = "ewr"
 
 [build]
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 2
 
 [env]
   FEEDGEN_DB_PATH = "/data/haiku.db"
@@ -12,14 +15,9 @@ primary_region = "ewr"
   source = "haiku_data"
   destination = "/data"
 
-[processes]
-  web = "gunicorn haiku.server:app --bind 0.0.0.0:8080"
-  worker = "python -m haiku.main --db /data/haiku.db"
-
 [[services]]
   internal_port = 8080
   protocol = "tcp"
-  processes = ["web"]
 
   [[services.ports]]
     handlers = ["http"]

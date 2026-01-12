@@ -32,8 +32,8 @@ def main():
 
     record = models.AppBskyFeedGenerator.Record(
         did=feed_did,
-        display_name="Haiku",
-        description="Haikus found on Bluesky. Three posts, 5-7-5 syllables, assembled into poetry.",
+        display_name="Found Haikus",
+        description="Haikus found on Bluesky.",
         created_at=client.get_current_time_iso(),
     )
 

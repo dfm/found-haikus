@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-haiku = "haiku:main"
+haiku = "haiku.main:main"
 haiku-serve = "haiku.server:serve"
 
 [dependency-groups]
