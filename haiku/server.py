@@ -9,6 +9,11 @@ from haiku.db import get_recent_haikus
 app = Flask(__name__)
 
 
+@app.route("/")
+def index():
+    return "Haikus found on Bluesky"
+
+
 def get_hostname():
     return os.environ.get("FEEDGEN_HOSTNAME", "localhost")
 
