@@ -1,26 +1,34 @@
 # Haiku Feed Generator
 
-BlueSky custom feed that assembles haikus from posts by finding triplets with 5-7-5 syllable patterns.
+Bluesky custom feed that assembles haikus from posts by finding triplets with 5-7-5 syllable patterns.
 
 ## Architecture
 
-- **Firehose consumer**: Connects to BlueSky relay via `atproto` library, filters for `app.bsky.feed.post` creates
-- **CAR parsing**: Records are extracted from CAR (Content Addressable aRchive) blocks using the operation's CID
-- **Feed generator**: (TODO) HTTP server implementing `app.bsky.feed.getFeedSkeleton`
+- **Firehose consumer** (`haiku/firehose.py`): Connects to Bluesky relay via `atproto`, filters English text posts without replies/embeds, counts syllables using CMU dict
+- **Haiku matcher** (`haiku/matcher.py`): Buffers 5 and 7 syllable posts, assembles haikus when a valid 5-7-5 triplet is found
+- **Database** (`haiku/db.py`): SQLite storage for haiku URIs, auto-cleans to keep most recent 10,000
+- **Feed server** (`haiku/server.py`): Flask app implementing `app.bsky.feed.getFeedSkeleton` with pagination
 
-## AT Protocol Notes
+## Deployment
 
-- Firehose messages contain: commits (with ops), identity updates, handle changes, etc.
-- Each commit has `ops` (operations) and `blocks` (CAR-encoded record data)
-- `RepoOp` contains: `action` (create/update/delete), `path` (collection/rkey), `cid` (reference to record in blocks)
-- Post path format: `app.bsky.feed.post/{rkey}`
-- Author DID is in `commit.repo`
+Deployed on Fly.io at https://found-haikus.fly.dev/
 
-## Running
+- Single VM runs both worker and server via `scripts/start.sh`
+- Worker loads CMU dict (~130MB), server stays lightweight
+- Volume mounted at `/data` for SQLite persistence
+
+```
+fly deploy
+fly logs --app found-haikus
+```
+
+## Local Development
 
 ```
 uv sync
-uv run haiku
+uv run haiku --db haiku.db    # run firehose worker
+uv run haiku-serve --db haiku.db  # run feed server
+uv run pytest                 # run tests
 ```
 
 ## Code Style

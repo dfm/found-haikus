@@ -1,7 +1,7 @@
 [project]
 name = "haiku"
 version = "0.1.0"
-description = "BlueSky custom feed that assembles haikus from posts"
+description = "Bluesky custom feed that assembles haikus from posts"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
