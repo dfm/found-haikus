@@ -1,4 +1,4 @@
-from haiku.db import MAX_HAIKUS, get_recent_haikus, init_db, save_haiku
+from haiku.db import get_recent_haikus, init_db, save_haiku
 from haiku.matcher import Haiku, Post
 
 
