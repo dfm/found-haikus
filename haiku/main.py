@@ -46,3 +46,7 @@ def main():
         print(f"Firehose error: {e}")
     except KeyboardInterrupt:
         print("\nShutting down...")
+
+
+if __name__ == "__main__":
+    main()

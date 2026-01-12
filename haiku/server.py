@@ -6,16 +6,25 @@ from flask import Flask, jsonify, request
 
 from haiku.db import get_recent_haikus
 
-HOSTNAME = os.environ.get("FEEDGEN_HOSTNAME", "localhost")
-PUBLISHER_DID = os.environ.get("FEEDGEN_PUBLISHER_DID", "")
-FEED_URI = f"at://{PUBLISHER_DID}/app.bsky.feed.generator/haiku"
-
 app = Flask(__name__)
+
+
+def get_hostname():
+    return os.environ.get("FEEDGEN_HOSTNAME", "localhost")
+
+
+def get_publisher_did():
+    return os.environ.get("FEEDGEN_PUBLISHER_DID", "")
+
+
+def get_feed_uri():
+    return f"at://{get_publisher_did()}/app.bsky.feed.generator/haiku"
 
 
 @app.route("/.well-known/did.json")
 def did_document():
-    service_did = f"did:web:{HOSTNAME}"
+    hostname = get_hostname()
+    service_did = f"did:web:{hostname}"
     return jsonify(
         {
             "@context": ["https://www.w3.org/ns/did/v1"],
@@ -24,7 +33,7 @@ def did_document():
                 {
                     "id": "#bsky_fg",
                     "type": "BskyFeedGenerator",
-                    "serviceEndpoint": f"https://{HOSTNAME}",
+                    "serviceEndpoint": f"https://{hostname}",
                 }
             ],
         }
@@ -33,11 +42,12 @@ def did_document():
 
 @app.route("/xrpc/app.bsky.feed.describeFeedGenerator")
 def describe_feed_generator():
-    service_did = f"did:web:{HOSTNAME}"
+    hostname = get_hostname()
+    service_did = f"did:web:{hostname}"
     return jsonify(
         {
             "did": service_did,
-            "feeds": [{"uri": FEED_URI}],
+            "feeds": [{"uri": get_feed_uri()}],
         }
     )
 
@@ -48,7 +58,7 @@ def get_feed_skeleton():
     cursor = request.args.get("cursor", "")
     limit = min(int(request.args.get("limit", 50)), 100)
 
-    if feed != FEED_URI:
+    if feed != get_feed_uri():
         return jsonify({"error": "UnknownFeed", "message": "Unknown feed"}), 400
 
     db_path = Path(os.environ.get("FEEDGEN_DB_PATH", "haiku.db"))

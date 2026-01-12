@@ -23,6 +23,27 @@ uv run haiku
 
 Watch the haikus roll in. Pass `--db haiku.db` to save them to a SQLite database.
 
+## Deploy to Fly.io
+
+```bash
+# Create the app and volume
+fly launch --no-deploy
+fly volumes create haiku_data --region ewr --size 1
+
+# Set your secrets
+fly secrets set FEEDGEN_HOSTNAME=your-app.fly.dev
+fly secrets set FEEDGEN_PUBLISHER_DID=did:plc:your-did
+
+# Deploy
+fly deploy
+
+# Publish the feed to your Bluesky account (once)
+BSKY_HANDLE=you.bsky.social \
+BSKY_PASSWORD=your-app-password \
+FEEDGEN_HOSTNAME=your-app.fly.dev \
+python scripts/publish_feed.py
+```
+
 ## Development
 
 ```bash

@@ -1,0 +1,41 @@
+# See https://fly.io/docs/reference/configuration/ for configuration options
+
+app = "haiku-feed"
+primary_region = "ewr"
+
+[build]
+
+[env]
+  FEEDGEN_DB_PATH = "/data/haiku.db"
+
+[mounts]
+  source = "haiku_data"
+  destination = "/data"
+
+[processes]
+  web = "gunicorn haiku.server:app --bind 0.0.0.0:8080"
+  worker = "python -m haiku.main --db /data/haiku.db"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+  processes = ["web"]
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_https = true
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.http_checks]]
+    interval = "30s"
+    timeout = "5s"
+    path = "/.well-known/did.json"
