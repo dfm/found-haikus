@@ -1,12 +1,23 @@
 import argparse
+import logging
+import sys
+import time
 from pathlib import Path
 
 from atproto import FirehoseSubscribeReposClient
-from atproto.exceptions import FirehoseError
 
 from haiku.db import init_db, save_haiku
 from haiku.firehose import create_message_handler
 from haiku.matcher import HaikuMatcher
+
+RESTART_DELAY = 5
+MAX_RESTART_DELAY = 300
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -32,15 +43,22 @@ def main():
         def on_haiku(haiku):
             print(f"\n{'=' * 40}\n{haiku}\n{'=' * 40}\n")
 
-    matcher = HaikuMatcher()
-    handler = create_message_handler(matcher, on_haiku)
-    client = FirehoseSubscribeReposClient()
-    try:
-        client.start(handler)
-    except FirehoseError as e:
-        print(f"Firehose error: {e}")
-    except KeyboardInterrupt:
-        print("\nShutting down...")
+    delay = RESTART_DELAY
+    while True:
+        matcher = HaikuMatcher()
+        handler = create_message_handler(matcher, on_haiku)
+        client = FirehoseSubscribeReposClient()
+        try:
+            logger.info("Connecting to firehose...")
+            client.start(handler)
+        except KeyboardInterrupt:
+            logger.info("Shutting down...")
+            sys.exit(0)
+        except Exception:
+            logger.exception("Firehose connection error")
+        logger.info("Restarting in %ds...", delay)
+        time.sleep(delay)
+        delay = min(delay * 2, MAX_RESTART_DELAY)
 
 
 if __name__ == "__main__":

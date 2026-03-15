@@ -1,9 +1,12 @@
+import logging
 import re
 
 from atproto import CAR, parse_subscribe_repos_message
 
 from haiku.matcher import HaikuMatcher
 from haiku.syllables import count_syllables
+
+logger = logging.getLogger(__name__)
 
 SKIP_FACET_TYPES = {
     "app.bsky.richtext.facet#tag",
@@ -71,46 +74,49 @@ def is_quality_text(text: str) -> bool:
 
 def create_message_handler(matcher: HaikuMatcher, on_haiku):
     def on_message_handler(message) -> None:
-        commit = parse_subscribe_repos_message(message)
+        try:
+            commit = parse_subscribe_repos_message(message)
 
-        if not hasattr(commit, "ops") or not commit.ops:
-            return
-        if not commit.blocks:
-            return
+            if not hasattr(commit, "ops") or not commit.ops:
+                return
+            if not commit.blocks:
+                return
 
-        car = CAR.from_bytes(commit.blocks)
+            car = CAR.from_bytes(commit.blocks)
 
-        for op in commit.ops:
-            if op.action != "create":
-                continue
-            if not op.path.startswith("app.bsky.feed.post/"):
-                continue
-            if not op.cid:
-                continue
+            for op in commit.ops:
+                if op.action != "create":
+                    continue
+                if not op.path.startswith("app.bsky.feed.post/"):
+                    continue
+                if not op.cid:
+                    continue
 
-            record = car.blocks.get(op.cid)
-            if not record or not isinstance(record, dict):
-                continue
-            if not is_english_text_only(record):
-                continue
+                record = car.blocks.get(op.cid)
+                if not record or not isinstance(record, dict):
+                    continue
+                if not is_english_text_only(record):
+                    continue
 
-            text = record.get("text", "").strip()
-            if not text:
-                continue
-            if has_emoji_in_middle(text):
-                continue
-            if not could_be_haiku_line(text):
-                continue
-            if not is_quality_text(text):
-                continue
+                text = record.get("text", "").strip()
+                if not text:
+                    continue
+                if has_emoji_in_middle(text):
+                    continue
+                if not could_be_haiku_line(text):
+                    continue
+                if not is_quality_text(text):
+                    continue
 
-            syllables = count_syllables(text)
-            if syllables not in HAIKU_SYLLABLES:
-                continue
+                syllables = count_syllables(text)
+                if syllables not in HAIKU_SYLLABLES:
+                    continue
 
-            uri = f"at://{commit.repo}/{op.path}"
-            haiku = matcher.add_post(uri, text, syllables)
-            if haiku:
-                on_haiku(haiku)
+                uri = f"at://{commit.repo}/{op.path}"
+                haiku = matcher.add_post(uri, text, syllables)
+                if haiku:
+                    on_haiku(haiku)
+        except Exception:
+            logger.exception("Error processing firehose message")
 
     return on_message_handler
