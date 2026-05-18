@@ -2,9 +2,9 @@ import logging
 import re
 
 from atproto import CAR, parse_subscribe_repos_message
+from syllables import is_haiku_line
 
 from haiku.matcher import HaikuMatcher
-from haiku.syllables import count_syllables
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ SKIP_FACET_TYPES = {
 
 MAX_CHARS = 50
 MAX_WORDS = 12
-HAIKU_SYLLABLES = {5, 7}
+HAIKU_FUZZINESS = 0.25
 
 TRAILING_NON_ALPHA = re.compile(r"[^\w\s]*\s*$")
 RANDOM_STRING = re.compile(r"(?=.*[0-9])(?=.*[A-Za-z])[A-Za-z0-9]{12,}")
@@ -108,8 +108,8 @@ def create_message_handler(matcher: HaikuMatcher, on_haiku):
                 if not is_quality_text(text):
                     continue
 
-                syllables = count_syllables(text)
-                if syllables not in HAIKU_SYLLABLES:
+                syllables = is_haiku_line(text, fuzziness=HAIKU_FUZZINESS)
+                if syllables is None:
                     continue
 
                 uri = f"at://{commit.repo}/{op.path}"
