@@ -4,7 +4,7 @@ Bluesky custom feed that assembles haikus from posts by finding triplets with 5-
 
 ## Architecture
 
-- **Firehose consumer** (`haiku/firehose.py`): Connects to Bluesky relay via `atproto`, filters English text posts without replies/embeds, counts syllables using CMU dict
+- **Firehose consumer** (`haiku/firehose.py`): Connects to Bluesky relay via `atproto`, filters English text posts without replies/embeds, classifies 5/7-syllable lines via the `syllables` library (`is_haiku_line`, conservative — abstains rather than guesses; `HAIKU_FUZZINESS` tunes precision/coverage)
 - **Haiku matcher** (`haiku/matcher.py`): Buffers 5 and 7 syllable posts, assembles haikus when a valid 5-7-5 triplet is found
 - **Database** (`haiku/db.py`): SQLite storage for haiku URIs, auto-cleans to keep most recent 10,000
 - **Feed server** (`haiku/server.py`): Flask app implementing `app.bsky.feed.getFeedSkeleton` with pagination
@@ -14,7 +14,7 @@ Bluesky custom feed that assembles haikus from posts by finding triplets with 5-
 Deployed on Fly.io at https://found-haikus.fly.dev/
 
 - Single VM runs both worker and server via `scripts/start.sh`
-- Worker loads CMU dict (~130MB), server stays lightweight
+- Worker imports `syllables` (pinned to a git commit; bundles a ~450KB lexicon + tiny JAX model, pulls in jax/jaxlib/scipy), server stays lightweight
 - Volume mounted at `/data` for SQLite persistence
 
 ```
